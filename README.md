@@ -31,3 +31,7 @@ time python "$SCRIPTS_DIR/neo4j_import_script.py" --csv_dir $CSV_DIR --database_
 ```
 
 Make sure to restart your server before trying to view the database from the console: `neo4j restart` or `neo4j stop` followed by `neo4j start`. Then view at in browser at `http://localhost:7474/browser/`.
+
+And then you can create something pretty like this:
+
+[[https://github.com/jwnorman/WordGraph/blob/master/images/two_to_thirteen.png]]
