@@ -60,6 +60,14 @@ def get_close_words():
 
 get_close_words()
 
+
+# Put words_dict into neo4j structure for words and one edit distance
+# relationships
+# (:Word)
+# (:Word)-[:deletes]->(:Word)
+# (:Word)-[:inserts]->(:Word)
+# (:Word)-[:replaces]->(:Word)
+# (:Word)-[:transposes]->(:Word)
 words = []
 deletions = []
 insertions = []
@@ -96,8 +104,29 @@ replations.to_csv("replations_edges.csv", index=0)
 transpositions.to_csv("transpositions_edges.csv", index=0)
 
 
+# Put anagrams into neo4j structure for word and anagrams
+# (:Alphagram)
+# (:Word)-[:anagrams_to]->(:Word)
+# (:Word)-[:has_alphagram]->(:Alphagram)
+alphagrams = []
+word_to_alphagram = []
+word_to_anagram = []
+for alphagram, words in anagrams.iteritems():
+    alphagrams.append((alphagram, "Alphagram"))
+    for word in words:
+        word_to_alphagram.append((word, alphagram, "has_alphagram"))
+        for word_2 in words:
+            if word != word_2:
+                word_to_anagram.append((word, word_2, "anagrams_to"))
 
+alphagrams = pd.DataFrame(alphagrams)
+word_to_alphagram = pd.DataFrame(word_to_alphagram)
+word_to_anagram = pd.DataFrame(word_to_anagram)
 
+alphagrams.columns = ["alphagram:ID", ":LABEL"]
+word_to_alphagram.columns = [":START_ID", ":END_ID", ":TYPE"]
+word_to_anagram.columns = [":START_ID", ":END_ID", ":TYPE"]
 
-
-
+alphagrams.to_csv("alphagrams_nodes.csv", index=0)
+word_to_alphagram.to_csv("word_to_alphagram_edges.csv", index=0)
+word_to_anagram.to_csv("word_to_anagram_edges.csv", index=0)
