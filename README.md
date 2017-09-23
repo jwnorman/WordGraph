@@ -1,3 +1,5 @@
+# Word Giraffe
+
 - Word source: `owl3_relevant_fields.txt` needs to be tab delmited with the columns being word, alphagram, definition, probability, playability, front_hooks, back_hooks but with no headers.
 - Download the .tar community neo4j version, not the pkg. https://neo4j.com/download/other-releases/#drivers
 
