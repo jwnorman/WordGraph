@@ -17,7 +17,7 @@ IMPORT_COMMAND=$NEO4J_ROOT/bin/neo4j-import
 ```
 
 And then define where you're storing your scripts (will probably be somewhere
-in the Giraffe directory)
+in the WordGraph directory).
 ```
 SCRIPTS_DIR=<path to script directory>
 ```
@@ -34,4 +34,4 @@ Make sure to restart your server before trying to view the database from the con
 
 And then you can create something pretty like this:
 
-[[https://github.com/jwnorman/WordGraph/blob/master/images/two_to_thirteen.png]]
+![](https://github.com/jwnorman/WordGraph/blob/master/images/two_to_thirteen.png)
