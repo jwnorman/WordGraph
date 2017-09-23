@@ -1,65 +1,14 @@
-import csv
 import pandas as pd
 
-from collections import defaultdict
-
-alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+from master import Master
 
 
-def load_words(filepath):
-    words_dict = {}
-    anagrams = defaultdict(list)
-    with open(filepath, 'rb') as tsvin:
-        tsvin = csv.reader(tsvin, delimiter='\t')
-        for row in tsvin:
-            anagrams[row[1]].append(row[0])
-            words_dict[row[0]] = {
-                'alphagram': row[1],
-                'definition': row[2],
-                'probability2': int(row[3]),
-                'playability': row[4],
-                'front_hooks': row[5],
-                'back_hooks': row[6]
-            }
-    return words_dict, anagrams
+master = Master('owl3_relevant_fields.txt',
+                'cehioorsstw.p',
+                'switcheroos.p')
 
-words_dict, anagrams = load_words('owl3_relevant_fields.txt')
-
-
-def edits(word):
-    # resource: https://github.com/mattalcock/blog/blob/master/2012/12/5/\
-    # python-spell-checker.rst
-    s = [(word[:i], word[i:]) for i in range(len(word) + 1)]
-    deletes = [a + b[1:] for a, b in s if b]
-    transposes = [a + b[1] + b[0] + b[2:] for a, b in s if len(b) > 1]
-    replaces = [a + c + b[1:] for a, b in s for c in alphabet if b]
-    inserts = [a + c + b for a, b in s for c in alphabet]
-    return {
-        'deletes': [delete for delete in deletes if delete != word],
-        'transposes': [tp for tp in transposes if tp != word],
-        'replaces': [replace for replace in replaces if replace != word],
-        'inserts': [insert for insert in inserts if insert != word]
-    }
-
-
-def get_edits_that_are_valid(word_edits):
-    new_dict = {}
-    for k, v in word_edits.iteritems():
-        new_dict[k] = list(
-            set([word for word in v if word in words_dict]))
-    return new_dict
-
-
-def get_close_words():
-    for word in words_dict:
-        one_edit_away = get_edits_that_are_valid(edits(word))
-        words_dict[word]['deletes'] = one_edit_away['deletes']
-        words_dict[word]['transposes'] = one_edit_away['transposes']
-        words_dict[word]['replaces'] = one_edit_away['replaces']
-        words_dict[word]['inserts'] = one_edit_away['inserts']
-
-get_close_words()
-
+anagrams = master.word_data.anagrams
+words_dict = master.word_data.words_dict
 
 # Put words_dict into neo4j structure for words and one edit distance
 # relationships
@@ -78,8 +27,9 @@ for word, info in words_dict.iteritems():
     # don't just use word as pk because there are alphagrams that would have
     # the same pk. Adding the label to the pk will make it sufficiently unique.
     pk = label + word
-    words.append((pk, word, info["back_hooks"], info["definition"],
-                  info["front_hooks"], info["probability2"], label))
+    words.append((pk, word, label, info["back_hooks"], info["definition"],
+                  info["front_hooks"], info["probability2"],
+                  info["is_naive_compound"], info["alphagram"], info["stem"]))
     for delete in info["deletes"]:
         deletions.append((pk, label + delete, "delete"))
     for insert in info["inserts"]:
@@ -95,8 +45,12 @@ insertions = pd.DataFrame(insertions)
 replations = pd.DataFrame(replations)
 transpositions = pd.DataFrame(transpositions)
 
-words.columns = ["pk:ID", "word", "back_hooks", "definition", "front_hooks",
-                 "probability2:int", ":LABEL"]
+# originally had `is_naive_compound` specified as boolean
+# (`is_naive_compound:boolean`) but neo4j was coverting everything to false
+# even though the csv had appropriate Trues. I will just keep it as a string.
+words.columns = ["pk:ID", "word", ":LABEL", "back_hooks", "definition",
+                 "front_hooks", "probability2:int",
+                 "is_naive_compound", "alphagram", "stem"]
 deletions.columns = [":START_ID", ":END_ID", ":TYPE"]
 insertions.columns = [":START_ID", ":END_ID", ":TYPE"]
 replations.columns = [":START_ID", ":END_ID", ":TYPE"]

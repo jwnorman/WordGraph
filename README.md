@@ -22,7 +22,7 @@ in the WordGraph directory).
 SCRIPTS_DIR=<path to script directory>
 ```
 
-Run `one_edit_away.py`, then manually move the csv files that were created into `CSV_DIR`.
+Run `main.py`, then manually move the csv files that were created into `CSV_DIR`.
 
 Now we just need to run the neo4j command and import into the database! Use the following command. It will take about 15 seconds. Make sure the `DATABASE_DIR` is completely empty, i.e., if you rerun the following command you'll first need to delete the contents of the directory.
 
