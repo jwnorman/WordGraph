@@ -74,15 +74,20 @@ insertions = []
 replations = []
 transpositions = []
 for word, info in words_dict.iteritems():
-    words.append((word, info["back_hooks"], info["definition"], info["front_hooks"], info["probability2"], "Word"))
+    label = "Word"
+    # don't just use word as pk because there are alphagrams that would have
+    # the same pk. Adding the label to the pk will make it sufficiently unique.
+    pk = label + word
+    words.append((pk, word, info["back_hooks"], info["definition"],
+                  info["front_hooks"], info["probability2"], label))
     for delete in info["deletes"]:
-        deletions.append((word, delete, "delete"))
+        deletions.append((pk, label + delete, "delete"))
     for insert in info["inserts"]:
-        insertions.append((word, insert, "insert"))
+        insertions.append((pk, label + insert, "insert"))
     for replace in info["replaces"]:
-        replations.append((word, replace, "replace"))
+        replations.append((pk, label + replace, "replace"))
     for transpose in info["transposes"]:
-        transpositions.append((word, transpose, "transpose"))
+        transpositions.append((pk, label + transpose, "transpose"))
 
 words = pd.DataFrame(words)
 deletions = pd.DataFrame(deletions)
@@ -90,7 +95,7 @@ insertions = pd.DataFrame(insertions)
 replations = pd.DataFrame(replations)
 transpositions = pd.DataFrame(transpositions)
 
-words.columns = ["word:ID", "back_hooks", "definition", "front_hooks",
+words.columns = ["pk:ID", "word", "back_hooks", "definition", "front_hooks",
                  "probability2:int", ":LABEL"]
 deletions.columns = [":START_ID", ":END_ID", ":TYPE"]
 insertions.columns = [":START_ID", ":END_ID", ":TYPE"]
@@ -112,18 +117,21 @@ alphagrams = []
 word_to_alphagram = []
 word_to_anagram = []
 for alphagram, words in anagrams.iteritems():
-    alphagrams.append((alphagram, "Alphagram"))
+    label = "Alphagram"
+    pk = label + alphagram
+    alphagrams.append((pk, alphagram, label))
     for word in words:
-        word_to_alphagram.append((word, alphagram, "has_alphagram"))
+        word_to_alphagram.append(("Word" + word, pk, "has_alphagram"))
         for word_2 in words:
             if word != word_2:
-                word_to_anagram.append((word, word_2, "anagrams_to"))
+                word_to_anagram.append(
+                    ("Word" + word, "Word" + word_2, "anagrams_to"))
 
 alphagrams = pd.DataFrame(alphagrams)
 word_to_alphagram = pd.DataFrame(word_to_alphagram)
 word_to_anagram = pd.DataFrame(word_to_anagram)
 
-alphagrams.columns = ["alphagram:ID", ":LABEL"]
+alphagrams.columns = ["pk:ID", "alphagram", ":LABEL"]
 word_to_alphagram.columns = [":START_ID", ":END_ID", ":TYPE"]
 word_to_anagram.columns = [":START_ID", ":END_ID", ":TYPE"]
 
